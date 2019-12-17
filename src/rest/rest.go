@@ -25,8 +25,6 @@ func Run() {
 
 		cart:=&api.Cart{
 			CartID:  uuid.New().String(),
-			UserID:  uuid.New().String(),
-			GuestID: uuid.New().String(),
 			Items:  []*api.CartItem{ci},
 		}
 

@@ -11,8 +11,8 @@ func init() {
 	log.Println("Starting Cart Service")
 	log.Println("Active variables:")
 	log.Println("  REDIS_ADDRESS     = ", redisAddress)
-	log.Println("  REDIS_PASSWORD    = ", strings.Repeat("*", len(RedisPassword)))
-	log.Println("  REDIS_DB          = ", RedisDb)
+	log.Println("  REDIS_PASSWORD    = ", strings.Repeat("*", len(redisPassword)))
+	log.Println("  REDIS_DB          = ", redisDb)
 	err := pingRedis()
 	if err != nil {
 		log.Fatalln("Unable to connect to the database at " + redisAddress + ": " + err.Error())

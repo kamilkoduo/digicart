@@ -14,7 +14,7 @@ var redisClient *redis.Client
 const defaultCartCapacity = 5
 
 /* Redis consts */
-const defaultRedisAddress = "redis:6379"
+const defaultRedisAddress = "localhost:6379"
 const defaultRedisPassword = ""
 const defaultRedisDB = 0
 
