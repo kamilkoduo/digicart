@@ -19,13 +19,16 @@ type CartItem struct {
 	OfferID    string            `jsonapi:"attr,offer_id"`
 	OfferPrice float64           `jsonapi:"attr,offer_price"`
 	OfferTitle map[string]string `jsonapi:"attr,offer_title"`
-	Count      int               `jsonapi:"attr,count"`
+	Count      uint              `jsonapi:"attr,count"`
 }
 
 type CartApi interface {
+	InitCart(cartID string, cartType CartType) (error)
+	CartExists(cartID string) (bool, error)
 	GetCart(cartID string, cartType CartType) (*Cart, error)
 	MergeCarts(TargetCartID string, SourceCartID string) error
-	AddCartItem(cartID string) error
-	UpdateCartItem(cartID string) error
-	RemoveCartItem(cartID string) error
+	AddCartItem(cartID string, cartItem *CartItem) error
+	UpdateCartItem(cartID string, cartItem *CartItem) error
+	RemoveCartItem(cartID string, cartItemID string) error
 }
+

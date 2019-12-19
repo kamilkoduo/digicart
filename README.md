@@ -6,7 +6,6 @@
 - GET /api/v1/cart-api/my  
 response: cart
 - POST /api/v1/cart-api/my/items/:id
-
 - DELETE /api/v1/cart-api/my/items/:id
 - PUT /api/v1/cart-api/my/items/:id
   
