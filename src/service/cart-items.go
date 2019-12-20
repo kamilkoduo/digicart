@@ -39,6 +39,7 @@ func addCartItem(cartID string, cartItem *api.CartItem) error {
 	return err
 
 }
+
 //func updateCartItemOnlyCount (cartID string, cartItem *api.CartItem) error {
 //	cartItemOld, err := getCartItem(cartID, cartItem.CartItemID)
 //	if err != nil {
@@ -61,7 +62,7 @@ func updateCartItem(cartID string, cartItem *api.CartItem) error {
 	if err != nil {
 		log.Printf(err.Error())
 	}
-	err = addCartItem(cartID,cartItem)
+	err = addCartItem(cartID, cartItem)
 	if err != nil {
 		log.Printf(err.Error())
 	}
@@ -106,12 +107,17 @@ func getCartItemInfo(cartID string, cartItemID string) (map[string]string, error
 	}
 	return info, err
 }
-func getCartItemOfferTitle(cartID string, cartItemID string) (map[string]string, error) {
-	titles, err := redisClient.HGetAll(keys.ItemOfferTitleMap(cartID, cartItemID)).Result()
+func getCartItemOfferTitle(cartID string, cartItemID string) (map[string]interface{}, error) {
+	title, err := redisClient.HGetAll(keys.ItemOfferTitleMap(cartID, cartItemID)).Result()
 	if err != nil {
 		log.Printf(err.Error())
 	}
-	return titles, err
+	//todo: map-map
+	titleSI := make(map[string]interface{})
+	for k, v := range title {
+		titleSI[k] = v
+	}
+	return titleSI, err
 }
 func getCartItem(cartID string, cartItemID string) (*api.CartItem, error) {
 	infoMap, err := getCartItemInfo(cartID, cartItemID)
@@ -127,7 +133,7 @@ func getCartItem(cartID string, cartItemID string) (*api.CartItem, error) {
 	if err != nil {
 		log.Printf(err.Error())
 	}
-	count, err := strconv.ParseUint(infoMap[keys.ItemCountMapKey()], 10 ,0)
+	count, err := strconv.ParseUint(infoMap[keys.ItemCountMapKey()], 10, 0)
 	if err != nil {
 		log.Printf(err.Error())
 	}

@@ -13,10 +13,21 @@ var redisClient *redis.Client
 /* consts */
 const defaultCartCapacity = 5
 
+/* app consts*/
+const defaultAppAdress = "0.0.0.0:8080"
+
 /* Redis consts */
-const defaultRedisAddress = "localhost:6379"
+const defaultRedisAddress = "0.0.0.0:6379"
 const defaultRedisPassword = ""
 const defaultRedisDB = 0
+
+var AppAddress = func() string {
+	val, found := os.LookupEnv("APP_ADDRESS")
+	if !found {
+		val = defaultAppAdress
+	}
+	return val
+}()
 
 var redisAddress = func() string {
 	val, found := os.LookupEnv("REDIS_ADDRESS")

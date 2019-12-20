@@ -5,7 +5,11 @@ import (
 )
 type CartApiServer struct{}
 
-func (s CartApiServer) CartExists(cartID string) (bool, error) {
+func (s CartApiServer) GetCartType(cartID string) (api.CartType, error) {
+	return getCartType(cartID)
+}
+
+func (s CartApiServer) CartExists(cartID string) (bool,error) {
 	return cartExists(cartID)
 }
 
@@ -13,11 +17,11 @@ func (s CartApiServer) InitCart(cartID string, cartType api.CartType) (error) {
 	return initCart(cartID, cartType)
 }
 
-func (s CartApiServer) MergeCarts(TargetCartID string, SourceCartID string) error {
-	panic("implement me")
+func (s CartApiServer) MergeCarts(targetCartID string, sourceCartID string) error {
+	return mergeCarts(targetCartID, sourceCartID)
 }
-func (s CartApiServer) GetCart(cartID string, cartType api.CartType) (*api.Cart, error) {
-	return getCart(cartID, cartType)
+func (s CartApiServer) GetCart(cartID string) (*api.Cart, error) {
+	return getCart(cartID)
 }
 func (s CartApiServer) AddCartItem(cartID string, cartItem *api.CartItem) error {
 	return addCartItem(cartID, cartItem)

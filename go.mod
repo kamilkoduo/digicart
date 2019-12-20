@@ -8,5 +8,5 @@ require (
 	github.com/google/jsonapi v0.0.0-20181016150055-d0428f63eb51
 	github.com/google/uuid v1.1.1
 	github.com/onsi/ginkgo v1.10.3
-	github.com/onsi/gomega v1.7.1 // indirect
+	github.com/onsi/gomega v1.7.1
 )

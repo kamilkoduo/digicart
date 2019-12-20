@@ -20,6 +20,9 @@ const (
 func CartSet() string {
 	return cartSet
 }
+func CartPrefix(cartID string) string {
+	return strings.Join([]string{cartSet, cartID}, sep)
+}
 func CartTypeKey(cartID string) string {
 	return strings.Join([]string{cartSet, cartID, cartType}, sep)
 }
