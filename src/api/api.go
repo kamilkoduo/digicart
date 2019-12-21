@@ -8,10 +8,10 @@ const (
 )
 
 type Cart struct {
-	CartID        string      `jsonapi:"primary, cart_id"`
-	CartType      CartType    `jsonapi:"attr, cart_type"`
-	MergedCartIDs []string    `jsonapi:"attr, merged_cart_ids"`
-	Items         []*CartItem `jsonapi:"relation, cart_items"`
+	CartID        string      `jsonapi:"primary,cart_id"`
+	CartType      CartType    `jsonapi:"attr,cart_type"`
+	MergedCartIDs []string    `jsonapi:"attr,merged_cart_ids"`
+	Items         []*CartItem `jsonapi:"relation,cart_items"`
 }
 
 type CartItem struct {

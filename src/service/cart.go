@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"github.com/go-redis/redis"
 	"github.com/kamilkoduo/digicart/src/api"
 	"github.com/kamilkoduo/digicart/src/carterrors"
@@ -19,12 +20,9 @@ func getCart(cartID string) (*api.Cart, error) {
 	}
 	cartType, err := getCartType(cartID)
 	if err != nil {
-		log.Printf(err.Error())
+		return nil, err
 	}
-	mergedCartIDs, err := getMergedCartIDs(cartID)
-	if err != nil {
-		log.Printf(err.Error())
-	}
+	mergedCartIDs := getMergedCartIDs(cartID)
 	items, err := getCartItems(cartID)
 	if err != nil {
 		log.Printf(err.Error())
@@ -47,12 +45,9 @@ func mergeCarts(targetCartID string, sourceCartID string) error {
 	if foundS {
 		sourceCart, err := getCart(sourceCartID)
 		if err != nil {
-			log.Printf(err.Error())
+			return err
 		}
 		removeCart(sourceCartID)
-		if err != nil {
-			log.Printf(err.Error())
-		}
 		addToMergedCartIDs(targetCartID, sourceCart.MergedCartIDs...)
 		if err != nil {
 			log.Printf(err.Error())
@@ -124,17 +119,20 @@ func getCartType(cartID string) (api.CartType, error) {
 	return (api.CartType)(cartType), nil
 }
 
-func getMergedCartIDs(cartID string) ([]string, error) {
+func getMergedCartIDs(cartID string) []string {
 	mergedCartsSet, err := redisClient.SMembers(keys.CartMergedSet(cartID)).Result()
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-	return mergedCartsSet, err
+	return mergedCartsSet
 }
 
 func addToMergedCartIDs(cartID string, mergedID ...string) {
-	_, err := redisClient.SAdd(keys.CartMergedSet(cartID), mergedID).Result()
-	if err != nil {
-		log.Fatalf(err.Error())
+	fmt.Print("ATTENTION: adding these merged ids: ", mergedID, "\n")
+	if len(mergedID) > 0 {
+		_, err := redisClient.SAdd(keys.CartMergedSet(cartID), mergedID).Result()
+		if err != nil {
+			log.Fatalf(err.Error())
+		}
 	}
 }

@@ -9,7 +9,10 @@ const (
 	GeneralError
 	CartNotFound
 	CartAlreadyExists
+	CartItemNotFound
+	CartItemAlreadyExists
 	InvalidCartID
+	InvalidCartItemID
 )
 
 var errStr = struct{ m map[ErrType]string }{
@@ -31,8 +34,11 @@ func (ce CartError) Error() string {
 func (ce CartError) Is(cartError CartError) bool {
 	return ce.Type == cartError.Type
 }
+func (ce CartError) IsType(errType ErrType) bool {
+	return ce.Type == errType
+}
 func New(errType ErrType, msg ...string) error {
-	return &CartError{
+	return CartError{
 		Type: errType,
 		msg:  strings.Join(msg,","),
 	}
