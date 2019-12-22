@@ -237,6 +237,122 @@ var _ = Describe("Rest", func() {
 					})
 				})
 			})
+
+		})
+		Describe("Authorization issues", func() {
+			Context("No auth headers provided", func() {
+				It("should block request", func() {
+					resp, err := http.Get(url.cart)
+					log.Print(url)
+					if err != nil {
+						log.Printf("error %v", err.Error())
+					}
+					Expect(err).ShouldNot(HaveOccurred())
+					Expect(resp.StatusCode).To(Equal(http.StatusUnauthorized))
+				})
+			})
+			Context("User auth header provided", func() {
+				Context("Cart exists", func() {
+					Context("Cart type is `guest`", func() {
+						It("should block request", func() {
+							client := &http.Client{}
+							req, err := http.NewRequest("GET", url.cart, nil)
+							Expect(err).ShouldNot(HaveOccurred())
+							req.Header.Set(userHeader, dataIDs.guest1Existed)
+							resp, err := client.Do(req)
+							Expect(err).ShouldNot(HaveOccurred())
+							Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
+						})
+					})
+					Context("Cart type is `user`", func() {
+						It("should reply OK", func() {
+							client := &http.Client{}
+							req, err := http.NewRequest("GET", url.cart, nil)
+							Expect(err).ShouldNot(HaveOccurred())
+							req.Header.Set(userHeader, dataIDs.user1Existed)
+							resp, err := client.Do(req)
+							Expect(err).ShouldNot(HaveOccurred())
+							Expect(resp.StatusCode).To(Equal(http.StatusOK))
+						})
+					})
+				})
+				Context("Cart does not exist", func() {
+					Context("Cart type is `guest`", func() {
+						It("should block request", func() {
+							client := &http.Client{}
+							req, err := http.NewRequest("GET", url.cart, nil)
+							Expect(err).ShouldNot(HaveOccurred())
+							req.Header.Set(userHeader, dataIDs.guest2NotExisted)
+							resp, err := client.Do(req)
+							Expect(err).ShouldNot(HaveOccurred())
+							Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
+						})
+					})
+					Context("Cart type is `user`", func() {
+						It("should reply NotFound", func() {
+							client := &http.Client{}
+							req, err := http.NewRequest("GET", url.cart, nil)
+							Expect(err).ShouldNot(HaveOccurred())
+							req.Header.Set(userHeader, dataIDs.user2NotExisted)
+							resp, err := client.Do(req)
+							Expect(err).ShouldNot(HaveOccurred())
+							Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
+						})
+					})
+				})
+			})
+			Context("Guest auth header provided", func() {
+				Context("Cart exists", func() {
+					Context("Cart type is `guest`", func() {
+						It("should block request", func() {
+							client := &http.Client{}
+							req, err := http.NewRequest("GET", url.cart, nil)
+							Expect(err).ShouldNot(HaveOccurred())
+							req.Header.Set(guestHeader, dataIDs.guest1Existed)
+							resp, err := client.Do(req)
+							Expect(err).ShouldNot(HaveOccurred())
+							Expect(resp.StatusCode).To(Equal(http.StatusOK))
+						})
+					})
+					Context("Cart type is `user`", func() {
+						It("should reply OK", func() {
+							client := &http.Client{}
+							req, err := http.NewRequest("GET", url.cart, nil)
+							Expect(err).ShouldNot(HaveOccurred())
+							req.Header.Set(guestHeader, dataIDs.user1Existed)
+							resp, err := client.Do(req)
+							Expect(err).ShouldNot(HaveOccurred())
+							Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
+						})
+					})
+				})
+				Context("Cart does not exist", func() {
+					Context("Cart type is `guest`", func() {
+						It("should block request", func() {
+							client := &http.Client{}
+							req, err := http.NewRequest("GET", url.cart, nil)
+							Expect(err).ShouldNot(HaveOccurred())
+							req.Header.Set(guestHeader, dataIDs.guest2NotExisted)
+							resp, err := client.Do(req)
+							Expect(err).ShouldNot(HaveOccurred())
+							Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
+						})
+					})
+					Context("Cart type is `user`", func() {
+						It("should reply NotFound", func() {
+							client := &http.Client{}
+							req, err := http.NewRequest("GET", url.cart, nil)
+							Expect(err).ShouldNot(HaveOccurred())
+							req.Header.Set(guestHeader, dataIDs.user2NotExisted)
+							resp, err := client.Do(req)
+							Expect(err).ShouldNot(HaveOccurred())
+							Expect(resp.StatusCode).To(Equal(http.StatusNotFound))
+						})
+					})
+				})
+			})
+		})
+		Describe("Authorized merge", func() {
 			Context("Merge carts", func() {
 				Context("Get cart", func() {
 					Context("cart exists", func() {
@@ -295,68 +411,5 @@ var _ = Describe("Rest", func() {
 				})
 			})
 		})
-		/*Describe("Authorization", func() {
-			Context("No auth headers provided", func() {
-				It("should block request", func() {
-					resp, err := http.Get(url.cart)
-					log.Print(url)
-					if err != nil {
-						log.Printf("error %v", err.Error())
-					}
-					Expect(err).ShouldNot(HaveOccurred())
-					Expect(resp.StatusCode).To(Equal(http.StatusUnauthorized))
-				})
-			})
-			Context("User auth header provided", func() {
-				Context("Cart exists", func() {
-					Context("Cart type is `guest`", func() {
-						It("should block request", func() {
-							client := &http.Client{}
-							req, err := http.NewRequest("GET", url.cart, nil)
-							Expect(err).ShouldNot(HaveOccurred())
-							req.Header.Set(userHeader, dataIDs.guest1Existed)
-							resp, err := client.Do(req)
-							Expect(err).ShouldNot(HaveOccurred())
-							Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
-						})
-					})
-					Context("Cart type is `user`", func() {
-						It("should reply OK", func() {
-							client := &http.Client{}
-							req, err := http.NewRequest("GET", url.cart, nil)
-							Expect(err).ShouldNot(HaveOccurred())
-							req.Header.Set(userHeader, dataIDs.user1)
-							resp, err := client.Do(req)
-							Expect(err).ShouldNot(HaveOccurred())
-							Expect(resp.StatusCode).To(Equal(http.StatusOK))
-						})
-					})
-				})
-				Context("Cart does not exist", func() {
-					Context("Cart type is `guest`", func() {
-						It("should block request", func() {
-							client := &http.Client{}
-							req, err := http.NewRequest("GET", url.cart, nil)
-							Expect(err).ShouldNot(HaveOccurred())
-							req.Header.Set(userHeader, dataIDs.guest2NotExisted)
-							resp, err := client.Do(req)
-							Expect(err).ShouldNot(HaveOccurred())
-							Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
-						})
-					})
-					Context("Cart type is `user`", func() {
-						It("should reply NotFound", func() {
-							client := &http.Client{}
-							req, err := http.NewRequest("GET", url.cart, nil)
-							Expect(err).ShouldNot(HaveOccurred())
-							req.Header.Set(userHeader, dataIDs.user2NotExisted)
-							resp, err := client.Do(req)
-							Expect(err).ShouldNot(HaveOccurred())
-							Expect(resp.StatusCode).To(Equal(http.StatusOK))
-						})
-					})
-				})
-			})
-		})*/
 	})
 })
