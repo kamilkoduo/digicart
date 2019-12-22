@@ -29,8 +29,6 @@ func AuthenticationRequired() gin.HandlerFunc {
 		ctx.Next()
 	}
 
-
-
 }
 
 func CartAuthorization(initCartIfDoesNotExist bool) gin.HandlerFunc {
@@ -42,6 +40,7 @@ func CartAuthorization(initCartIfDoesNotExist bool) gin.HandlerFunc {
 			ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
+		_, withFutureMerge := ctx.Get("mergeCartID")
 		if exists {
 			cartTypeActual, err := cartApi.GetCartType((cartID).(string))
 			if err != nil {
@@ -52,7 +51,7 @@ func CartAuthorization(initCartIfDoesNotExist bool) gin.HandlerFunc {
 				ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Access denied"})
 				return
 			}
-		} else if initCartIfDoesNotExist {
+		} else if initCartIfDoesNotExist || withFutureMerge {
 			err = cartApi.InitCart((cartID).(string), (cartType).(api.CartType))
 			if err != nil {
 				ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -67,7 +66,7 @@ func CartMerge() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		cartID, _ := ctx.Get("cartID")
 		mergeCartID, found := ctx.Get("mergeCartID")
-		if found{
+		if found {
 			err := cartApi.MergeCarts(cartID.(string), mergeCartID.(string))
 			if err != nil {
 				ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

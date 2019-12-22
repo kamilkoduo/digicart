@@ -3,12 +3,25 @@ version: '3.1'
 
 networks:
   redis-net:
-  private-net:
+  web:
 
 services:
   redis:
     image: redis:alpine
-    ports:
-      - 6379:6379
+#    ports:
+#      - 6379:6379
     networks:
       - redis-net
+
+  cart-service:
+    image: registry.github.com/kamilkoduo/digicart/cart:local
+    command: "/app/cart/build"
+    ports:
+      - 80:8080
+    environment:
+      - REDIS_ADDRESS=redis:6379
+      - APP_ADDRESS=0.0.0.0:8080
+      - GIN_MODE=debug
+    networks:
+      - redis-net
+      - web

@@ -91,7 +91,6 @@ func getCartItemOfferTitle(cartID string, cartItemID string) (map[string]interfa
 	if err != nil {
 		log.Printf(err.Error())
 	}
-	//todo: map-map
 	titleSI := make(map[string]interface{})
 	for k, v := range title {
 		titleSI[k] = v
