@@ -17,9 +17,8 @@ jobs:
     - stage: build
       name: "Build Docker Image and push to registry"
       script:
-        - "docker build -t ${CI_REGISTRY_URL}/${CI_PROJECT_PATH}/${CI_BRANCH}:cart
-                  -f docker/cart/Dockerfile . --no-cache"
-        - "docker push ${CI_REGISTRY_URL}/${CI_PROJECT_PATH}/${CI_BRANCH}:cart"
+        - "docker build -t ${CI_PROJECT_PATH}/${CI_BRANCH}:cart -f docker/cart/Dockerfile . --no-cache"
+        - "docker push ${CI_PROJECT_PATH}/${CI_BRANCH}:cart"
     - stage: success
       name: "Report success"
       script:
