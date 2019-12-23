@@ -24,7 +24,7 @@ func getCart(cartID string) (*api.Cart, error) {
 	mergedCartIDs := getMergedCartIDs(cartID)
 	items, err := getCartItems(cartID)
 	if err != nil {
-		log.Printf(err.Error())
+		return nil, err
 	}
 	cart := &api.Cart{
 		CartID:        cartID,
@@ -35,7 +35,7 @@ func getCart(cartID string) (*api.Cart, error) {
 	return cart, nil
 }
 
-func mergeCarts(targetCartID string, sourceCartID string) error {
+func mergeCarts(targetCartID, sourceCartID string) error {
 	// check cart existence
 	foundS, err := cartExists(sourceCartID)
 	if err != nil {
@@ -48,13 +48,10 @@ func mergeCarts(targetCartID string, sourceCartID string) error {
 		}
 		removeCart(sourceCartID)
 		addToMergedCartIDs(targetCartID, sourceCart.MergedCartIDs...)
-		if err != nil {
-			log.Printf(err.Error())
-		}
 		for _, item := range sourceCart.Items {
 			err = addCartItem(targetCartID, item)
 			if err != nil {
-				log.Printf(err.Error())
+				return err
 			}
 		}
 	}
@@ -84,7 +81,7 @@ func initCart(cartID string, cartType api.CartType) error {
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-	_, err = redisClient.Set(keys.CartTypeKey(cartID), (uint8)(cartType), -1).Result()
+	_, err = redisClient.Set(keys.CartTypeKey(cartID), uint8(cartType), -1).Result()
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
@@ -115,7 +112,7 @@ func getCartType(cartID string) (api.CartType, error) {
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-	return (api.CartType)(cartType), nil
+	return api.CartType(cartType), nil
 }
 
 func getMergedCartIDs(cartID string) []string {

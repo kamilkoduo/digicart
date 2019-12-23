@@ -55,12 +55,12 @@ var _ = Describe("Rest", func() {
 		cartItem func(id string) string
 	}
 	BeforeSuite(func() {
-		//run server
+		// run server
 		func() {
 			go rest.Run()
 			time.Sleep(1.5e9)
 		}()
-		//init urls
+		// init urls
 		func() {
 			url.app = "http://" + service.AppAddress
 			url.cart = url.app + "/api/v1/cart-api/my"
@@ -68,24 +68,6 @@ var _ = Describe("Rest", func() {
 				return url.cart + "/items/:" + id
 			}
 		}()
-		////populate cart user 1
-		//func() {
-		//	client := &http.Client{}
-		//	req, _ := http.NewRequest("GET", url.cartItem(dataIDs.user1Existed), nil)
-		//	req.Header.Set(userHeader, dataIDs.guest1Existed)
-		//	resp, err := client.Do(req)
-		//	Expect(err).ShouldNot(HaveOccurred())
-		//	Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
-		//}()
-		/*//populate cart item
-		func() {
-			jsonData := []byte(`{"data": {"type": "cart_item","attributes": {"count": 1,"offer_id": "1",
-							"offer_price": 400,"offer_title": {"en": "x","ru": "f"}}}}`)
-
-			var v interface{}
-			_ = json.Unmarshal(jsonData, &v)
-			cartItemData = v.(map[string]interface{})
-		}()*/
 	})
 
 	Describe("Interaction with Cart API", func() {
@@ -389,7 +371,7 @@ var _ = Describe("Rest", func() {
 							Expect(err).ShouldNot(HaveOccurred())
 							Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
-							//check guest id
+							// check guest id
 							body, err := ioutil.ReadAll(resp.Body)
 							Expect(err).ShouldNot(HaveOccurred())
 							jsonMap := make(map[string]interface{})
