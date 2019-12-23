@@ -48,5 +48,3 @@ func ItemOfferPriceMapKey() string {
 func ItemCountMapKey() string {
 	return itemCount
 }
-
-//func CartItemSet = CartSet+KeySep+

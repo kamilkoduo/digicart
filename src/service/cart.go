@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"github.com/go-redis/redis"
 	"github.com/kamilkoduo/digicart/src/api"
 	"github.com/kamilkoduo/digicart/src/carterrors"
@@ -128,7 +127,6 @@ func getMergedCartIDs(cartID string) []string {
 }
 
 func addToMergedCartIDs(cartID string, mergedID ...string) {
-	fmt.Print("ATTENTION: adding these merged ids: ", mergedID, "\n")
 	if len(mergedID) > 0 {
 		_, err := redisClient.SAdd(keys.CartMergedSet(cartID), mergedID).Result()
 		if err != nil {
