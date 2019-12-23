@@ -9,7 +9,8 @@ stages:
 
 before_install:
   - docker login --username ${CI_REGISTRY_USERNAME} -p ${CI_REGISTRY_TOKEN} ${CI_REGISTRY_URL}
-  - export CI_BRANCH=${$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)////_}
+  - export BRANCH=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)
+  - export CI_BRANCH=$(echo $BRANCH | sed -e 's/\//-/g')
   - echo "TRAVIS_BRANCH=$TRAVIS_BRANCH, PR=$PR, CI_BRANCH=$CI_BRANCH"
 
 jobs:
