@@ -1,0 +1,27 @@
+language: minimal
+
+services:
+  - docker
+
+stages:
+  - build
+  - success
+
+before_install:
+  - docker login --username ${CI_REGISTRY_USERNAME} -p ${CI_REGISTRY_TOKEN} ${CI_REGISTRY_URL}
+  - export BRANCH=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)
+  - export CI_BRANCH=$(echo $BRANCH | sed -e 's/\//-/g')
+  - echo "TRAVIS_BRANCH=$TRAVIS_BRANCH, PR=$PR, CI_BRANCH=$CI_BRANCH"
+
+jobs:
+  include:
+    - stage: build
+      name: "Build Docker Image and push to registry"
+      script:
+        - "docker build -t ${CI_PROJECT_PATH}:cart_${CI_BRANCH} -f docker/cart/Dockerfile . --no-cache"
+        - "docker push ${CI_PROJECT_PATH}:cart_${CI_BRANCH}"
+    - stage: success
+      name: "Report success"
+      script:
+        - echo "SUCCESS"
+
