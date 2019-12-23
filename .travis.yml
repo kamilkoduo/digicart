@@ -5,15 +5,21 @@ services:
 
 stages:
   - build
+  - success
 
 before_install:
   - docker login --username ${CI_REGISTRY_USERNAME} -p ${CI_REGISTRY_TOKEN} ${CI_REGISTRY_URL}
 
-script:
-  - echo "SUCCESS"
+jobs:
+  include:
+    - stage: build
+      name: "Build Docker Image and push to registry"
+      script:
+        - "docker build -t ${CI_REGISTRY}/${CI_PROJECT_PATH}/cart:${TRAVIS_COMMIT}
+                  -f docker/cart/Dockerfile . --no-cache"
+        - "docker push ${CI_REGISTRY}/${CI_PROJECT_PATH}/cart:${TRAVIS_COMMIT}"
+    - stage: success
+      name: "Report success"
+      script:
+        - echo "SUCCESS"
 
-build:
-  script:
-    - "docker build -t ${CI_REGISTRY}/${CI_PROJECT_PATH}/cart:${TRAVIS_COMMIT}
-            -f docker/cart/Dockerfile . --no-cache"
-    - "docker push ${CI_REGISTRY}/${CI_PROJECT_PATH}/cart:${TRAVIS_COMMIT}"
