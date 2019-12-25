@@ -14,6 +14,7 @@ var cartAPI api.CartAPI = service.CartAPIServer{}
 
 func Run() {
 	router := gin.Default()
+	router.Use(JSONAPIHeader())
 	router.Use(AuthenticationRequired())
 
 	v1ApiMy := router.Group("/api/v1/cart-api/my")
@@ -25,14 +26,12 @@ func Run() {
 				cartID, _ := ctx.Get("cartID")
 				cart, err := cartAPI.GetCart(cartID.(string))
 				if err != nil {
-					if err.(carterrors.CartError).IsType(carterrors.CartNotFound) {
-						ctx.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": err.Error()})
-					} else {
-						ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-					}
+					cErr := err.(carterrors.CartError)
+					ctx.Status(cErr.StatusCode())
+					_ = jsonapi.MarshalErrors(ctx.Writer, []*jsonapi.ErrorObject{cErr.JSONObject()})
+					ctx.Abort()
 					return
 				}
-				ctx.Header("content-type", jsonapi.MediaType)
 				ctx.Status(http.StatusOK)
 				err = jsonapi.MarshalPayload(ctx.Writer, cart)
 				if err != nil {
@@ -50,11 +49,10 @@ func Run() {
 					cartItem, _ := ctx.Get("cartItem")
 					err := cartAPI.AddCartItem(cartID.(string), cartItem.(*api.CartItem))
 					if err != nil {
-						if err.(carterrors.CartError).IsType(carterrors.CartItemAlreadyExists) {
-							ctx.AbortWithStatusJSON(http.StatusConflict, gin.H{"error": err.Error()})
-						} else {
-							ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-						}
+						cErr := err.(carterrors.CartError)
+						ctx.Status(cErr.StatusCode())
+						_ = jsonapi.MarshalErrors(ctx.Writer, []*jsonapi.ErrorObject{cErr.JSONObject()})
+						ctx.Abort()
 						return
 					}
 					ctx.Status(http.StatusOK)
@@ -69,11 +67,10 @@ func Run() {
 					cartItem, _ := ctx.Get("cartItem")
 					err := cartAPI.UpdateCartItem((cartID).(string), cartItem.(*api.CartItem))
 					if err != nil {
-						if err.(carterrors.CartError).IsType(carterrors.CartItemNotFound) {
-							ctx.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": err.Error()})
-						} else {
-							ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-						}
+						cErr := err.(carterrors.CartError)
+						ctx.Status(cErr.StatusCode())
+						_ = jsonapi.MarshalErrors(ctx.Writer, []*jsonapi.ErrorObject{cErr.JSONObject()})
+						ctx.Abort()
 						return
 					}
 					ctx.Status(http.StatusOK)
@@ -88,11 +85,10 @@ func Run() {
 					cartItemID, _ := ctx.Get("cartItemID")
 					err := cartAPI.RemoveCartItem((cartID).(string), (cartItemID).(string))
 					if err != nil {
-						if err.(carterrors.CartError).IsType(carterrors.CartItemNotFound) {
-							ctx.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": err.Error()})
-						} else {
-							ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-						}
+						cErr := err.(carterrors.CartError)
+						ctx.Status(cErr.StatusCode())
+						_ = jsonapi.MarshalErrors(ctx.Writer, []*jsonapi.ErrorObject{cErr.JSONObject()})
+						ctx.Abort()
 						return
 					}
 					ctx.Status(http.StatusOK)

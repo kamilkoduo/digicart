@@ -4,9 +4,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/jsonapi"
 	"github.com/kamilkoduo/digicart/src/api"
-	"net/http"
+	"github.com/kamilkoduo/digicart/src/carterrors"
 )
 
+func JSONAPIHeader() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		ctx.Header("content-type", jsonapi.MediaType)
+	}
+}
 func AuthenticationRequired() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		userID := ctx.Request.Header.Get("x-user-id")
@@ -23,7 +28,11 @@ func AuthenticationRequired() gin.HandlerFunc {
 			ctx.Set("cartID", guestID)
 			ctx.Set("cartType", api.CartTypeGuest)
 		} else {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthenticated"})
+			cErr := carterrors.New(carterrors.Unauthenticated, "Authentication Required")
+			ctx.Status(cErr.StatusCode())
+			_ = jsonapi.MarshalErrors(ctx.Writer, []*jsonapi.ErrorObject{cErr.JSONObject()})
+			ctx.Abort()
+			return
 		}
 		ctx.Next()
 	}
@@ -35,24 +44,36 @@ func CartAuthorization(initCartIfDoesNotExist bool) gin.HandlerFunc {
 		cartType, _ := ctx.Get("cartType")
 		exists, err := cartAPI.CartExists((cartID).(string))
 		if err != nil {
-			ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			cErr := err.(carterrors.CartError)
+			ctx.Status(cErr.StatusCode())
+			_ = jsonapi.MarshalErrors(ctx.Writer, []*jsonapi.ErrorObject{cErr.JSONObject()})
+			ctx.Abort()
 			return
 		}
 		_, withFutureMerge := ctx.Get("mergeCartID")
 		if exists {
 			cartTypeActual, err := cartAPI.GetCartType((cartID).(string))
 			if err != nil {
-				ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				cErr := err.(carterrors.CartError)
+				ctx.Status(cErr.StatusCode())
+				_ = jsonapi.MarshalErrors(ctx.Writer, []*jsonapi.ErrorObject{cErr.JSONObject()})
+				ctx.Abort()
 				return
 			}
 			if cartType != cartTypeActual {
-				ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Access denied"})
+				cErr := carterrors.New(carterrors.AccessDenied)
+				ctx.Status(cErr.StatusCode())
+				_ = jsonapi.MarshalErrors(ctx.Writer, []*jsonapi.ErrorObject{cErr.JSONObject()})
+				ctx.Abort()
 				return
 			}
 		} else if initCartIfDoesNotExist || withFutureMerge {
 			err = cartAPI.InitCart((cartID).(string), (cartType).(api.CartType))
 			if err != nil {
-				ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				cErr := err.(carterrors.CartError)
+				ctx.Status(cErr.StatusCode())
+				_ = jsonapi.MarshalErrors(ctx.Writer, []*jsonapi.ErrorObject{cErr.JSONObject()})
+				ctx.Abort()
 				return
 			}
 		}
@@ -67,7 +88,10 @@ func CartMerge() gin.HandlerFunc {
 		if found {
 			err := cartAPI.MergeCarts(cartID.(string), mergeCartID.(string))
 			if err != nil {
-				ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				cErr := err.(carterrors.CartError)
+				ctx.Status(cErr.StatusCode())
+				_ = jsonapi.MarshalErrors(ctx.Writer, []*jsonapi.ErrorObject{cErr.JSONObject()})
+				ctx.Abort()
 				return
 			}
 		}
@@ -79,13 +103,20 @@ func CartItemPreprocess(withPayload bool) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		cartItemID := ctx.Param("id")
 		if cartItemID == "" {
-			ctx.AbortWithStatusJSON(http.StatusUnprocessableEntity, gin.H{"error": "cart item id was not supplied"})
+			cErr := carterrors.New(carterrors.InvalidCartItemID)
+			ctx.Status(cErr.StatusCode())
+			_ = jsonapi.MarshalErrors(ctx.Writer, []*jsonapi.ErrorObject{cErr.JSONObject()})
+			ctx.Abort()
+			return
 		}
 		if withPayload {
 			var cartItem = &api.CartItem{}
 			err := jsonapi.UnmarshalPayload(ctx.Request.Body, cartItem)
 			if err != nil {
-				ctx.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"error": err.Error()})
+				cErr := err.(carterrors.CartError)
+				ctx.Status(cErr.StatusCode())
+				_ = jsonapi.MarshalErrors(ctx.Writer, []*jsonapi.ErrorObject{cErr.JSONObject()})
+				ctx.Abort()
 				return
 			}
 			cartItem.CartItemID = cartItemID
