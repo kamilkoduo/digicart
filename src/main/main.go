@@ -6,6 +6,4 @@ import (
 
 func main() {
 	rest.Run()
-	//srv:=service.CartApiServer{}
-	//_, _ = srv.GetCart("cart1")
 }

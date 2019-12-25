@@ -32,10 +32,10 @@ func CartMergedSet(cartID string) string {
 func CartItemSet(cartID string) string {
 	return strings.Join([]string{cartSet, cartID, items}, sep)
 }
-func ItemInfoMap(cartID string, cartItemID string) string {
+func ItemInfoMap(cartID, cartItemID string) string {
 	return strings.Join([]string{cartSet, cartID, items, cartItemID, itemInfo}, sep)
 }
-func ItemOfferTitleMap(cartID string, cartItemID string) string {
+func ItemOfferTitleMap(cartID, cartItemID string) string {
 	return strings.Join([]string{cartSet, cartID, items, cartItemID, itemOfferTitle}, sep)
 }
 

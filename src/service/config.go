@@ -10,11 +10,8 @@ import (
 /* vars */
 var redisClient *redis.Client
 
-/* consts */
-const defaultCartCapacity = 5
-
 /* app consts*/
-const defaultAppAdress = "0.0.0.0:8080"
+const defaultAppAddress = "0.0.0.0:8080"
 
 /* Redis consts */
 const defaultRedisAddress = "0.0.0.0:6379"
@@ -24,7 +21,7 @@ const defaultRedisDB = 0
 var AppAddress = func() string {
 	val, found := os.LookupEnv("APP_ADDRESS")
 	if !found {
-		val = defaultAppAdress
+		val = defaultAppAddress
 	}
 	return val
 }()

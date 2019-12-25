@@ -32,5 +32,4 @@ func pingRedis() (err error) {
 		return errors.New("Unable to ping Redis database: " + err.Error())
 	}
 	return nil
-
 }

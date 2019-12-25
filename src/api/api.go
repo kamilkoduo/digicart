@@ -3,8 +3,8 @@ package api
 type CartType uint8
 
 const (
-	CartType_Authorized CartType = 0
-	CartType_Guest      CartType = 1
+	CartTypeAuthorized CartType = 0
+	CartTypeGuest      CartType = 1
 )
 
 type Cart struct {
@@ -22,7 +22,7 @@ type CartItem struct {
 	Count      uint                   `jsonapi:"attr,count"`
 }
 
-type CartApi interface {
+type CartAPI interface {
 	InitCart(cartID string, cartType CartType) error
 	CartExists(cartID string) (bool, error)
 	GetCart(cartID string) (*Cart, error)

@@ -4,7 +4,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/jsonapi"
 	"github.com/kamilkoduo/digicart/src/api"
-	"log"
 	"net/http"
 )
 
@@ -15,34 +14,33 @@ func AuthenticationRequired() gin.HandlerFunc {
 
 		if userID != "" {
 			ctx.Set("cartID", userID)
-			ctx.Set("cartType", api.CartType_Authorized)
+			ctx.Set("cartType", api.CartTypeAuthorized)
 
 			if guestID != "" {
 				ctx.Set("mergeCartID", guestID)
 			}
 		} else if guestID != "" {
 			ctx.Set("cartID", guestID)
-			ctx.Set("cartType", api.CartType_Guest)
+			ctx.Set("cartType", api.CartTypeGuest)
 		} else {
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthenticated"})
 		}
 		ctx.Next()
 	}
-
 }
 
 func CartAuthorization(initCartIfDoesNotExist bool) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		cartID, _ := ctx.Get("cartID")
 		cartType, _ := ctx.Get("cartType")
-		exists, err := cartApi.CartExists((cartID).(string))
+		exists, err := cartAPI.CartExists((cartID).(string))
 		if err != nil {
 			ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 		_, withFutureMerge := ctx.Get("mergeCartID")
 		if exists {
-			cartTypeActual, err := cartApi.GetCartType((cartID).(string))
+			cartTypeActual, err := cartAPI.GetCartType((cartID).(string))
 			if err != nil {
 				ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 				return
@@ -52,7 +50,7 @@ func CartAuthorization(initCartIfDoesNotExist bool) gin.HandlerFunc {
 				return
 			}
 		} else if initCartIfDoesNotExist || withFutureMerge {
-			err = cartApi.InitCart((cartID).(string), (cartType).(api.CartType))
+			err = cartAPI.InitCart((cartID).(string), (cartType).(api.CartType))
 			if err != nil {
 				ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 				return
@@ -67,7 +65,7 @@ func CartMerge() gin.HandlerFunc {
 		cartID, _ := ctx.Get("cartID")
 		mergeCartID, found := ctx.Get("mergeCartID")
 		if found {
-			err := cartApi.MergeCarts(cartID.(string), mergeCartID.(string))
+			err := cartAPI.MergeCarts(cartID.(string), mergeCartID.(string))
 			if err != nil {
 				ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 				return
@@ -87,7 +85,6 @@ func CartItemPreprocess(withPayload bool) gin.HandlerFunc {
 			var cartItem = &api.CartItem{}
 			err := jsonapi.UnmarshalPayload(ctx.Request.Body, cartItem)
 			if err != nil {
-				log.Printf(err.Error())
 				ctx.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"error": err.Error()})
 				return
 			}
