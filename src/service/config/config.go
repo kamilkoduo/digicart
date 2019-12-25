@@ -7,7 +7,7 @@ import (
 	"strconv"
 )
 
-/* vars */
+// RedisClient ...
 var RedisClient *redis.Client
 
 /* app consts*/
