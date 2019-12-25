@@ -5,7 +5,9 @@ import (
 	"github.com/google/jsonapi"
 	"github.com/kamilkoduo/digicart/src/api"
 	"github.com/kamilkoduo/digicart/src/carterrors"
+	"github.com/kamilkoduo/digicart/src/rest/config"
 	"github.com/kamilkoduo/digicart/src/service"
+	config2 "github.com/kamilkoduo/digicart/src/service/config"
 	"log"
 	"net/http"
 )
@@ -14,66 +16,63 @@ var cartAPI api.CartAPI = service.CartAPIServer{}
 
 func Run() {
 	router := gin.Default()
+	router.Use(JSONAPIHeader())
 	router.Use(AuthenticationRequired())
 
-	v1ApiMy := router.Group("/api/v1/cart-api/my")
+	v1ApiMy := router.Group(config.PathAPIv1My)
 	{
 		v1ApiMy.GET("/",
 			CartAuthorization(false),
 			CartMerge(),
 			func(ctx *gin.Context) {
-				cartID, _ := ctx.Get("cartID")
+				cartID, _ := ctx.Get(config.KeyCartID)
 				cart, err := cartAPI.GetCart(cartID.(string))
 				if err != nil {
-					if err.(carterrors.CartError).IsType(carterrors.CartNotFound) {
-						ctx.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": err.Error()})
-					} else {
-						ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-					}
+					cErr := err.(carterrors.CartError)
+					ctx.Status(cErr.StatusCode())
+					_ = jsonapi.MarshalErrors(ctx.Writer, []*jsonapi.ErrorObject{cErr.JSONObject()})
+					ctx.Abort()
 					return
 				}
-				ctx.Header("content-type", jsonapi.MediaType)
 				ctx.Status(http.StatusOK)
 				err = jsonapi.MarshalPayload(ctx.Writer, cart)
 				if err != nil {
 					log.Fatalf(err.Error())
 				}
 			})
-		items := v1ApiMy.Group("/items")
+		items := v1ApiMy.Group(config.PathPostfixItems)
 		{
-			items.POST("/:id",
+			items.POST("/:"+config.KeyID,
 				CartAuthorization(true),
 				CartMerge(),
 				CartItemPreprocess(true),
 				func(ctx *gin.Context) {
-					cartID, _ := ctx.Get("cartID")
-					cartItem, _ := ctx.Get("cartItem")
+					cartID, _ := ctx.Get(config.KeyCartID)
+					cartItem, _ := ctx.Get(config.KeyCartItem)
 					err := cartAPI.AddCartItem(cartID.(string), cartItem.(*api.CartItem))
 					if err != nil {
-						if err.(carterrors.CartError).IsType(carterrors.CartItemAlreadyExists) {
-							ctx.AbortWithStatusJSON(http.StatusConflict, gin.H{"error": err.Error()})
-						} else {
-							ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-						}
+						cErr := err.(carterrors.CartError)
+						ctx.Status(cErr.StatusCode())
+						_ = jsonapi.MarshalErrors(ctx.Writer, []*jsonapi.ErrorObject{cErr.JSONObject()})
+						ctx.Abort()
 						return
 					}
 					ctx.Status(http.StatusOK)
 				})
 			// put
-			items.PUT("/:id",
+			items.PUT("/:"+config.KeyID,
 				CartAuthorization(false),
 				CartMerge(),
 				CartItemPreprocess(true),
 				func(ctx *gin.Context) {
-					cartID, _ := ctx.Get("cartID")
-					cartItem, _ := ctx.Get("cartItem")
+					cartID, _ := ctx.Get(config.KeyCartID)
+					cartItem, _ := ctx.Get(config.KeyCartItem)
 					err := cartAPI.UpdateCartItem((cartID).(string), cartItem.(*api.CartItem))
 					if err != nil {
-						if err.(carterrors.CartError).IsType(carterrors.CartItemNotFound) {
-							ctx.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": err.Error()})
-						} else {
-							ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-						}
+						cErr := err.(carterrors.CartError)
+						ctx.Status(cErr.StatusCode())
+						_ = jsonapi.MarshalErrors(ctx.Writer, []*jsonapi.ErrorObject{cErr.JSONObject()})
+						ctx.Abort()
 						return
 					}
 					ctx.Status(http.StatusOK)
@@ -84,15 +83,14 @@ func Run() {
 				CartMerge(),
 				CartItemPreprocess(false),
 				func(ctx *gin.Context) {
-					cartID, _ := ctx.Get("cartID")
-					cartItemID, _ := ctx.Get("cartItemID")
+					cartID, _ := ctx.Get(config.KeyCartID)
+					cartItemID, _ := ctx.Get(config.KeyCartItemID)
 					err := cartAPI.RemoveCartItem((cartID).(string), (cartItemID).(string))
 					if err != nil {
-						if err.(carterrors.CartError).IsType(carterrors.CartItemNotFound) {
-							ctx.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": err.Error()})
-						} else {
-							ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-						}
+						cErr := err.(carterrors.CartError)
+						ctx.Status(cErr.StatusCode())
+						_ = jsonapi.MarshalErrors(ctx.Writer, []*jsonapi.ErrorObject{cErr.JSONObject()})
+						ctx.Abort()
 						return
 					}
 					ctx.Status(http.StatusOK)
@@ -100,5 +98,5 @@ func Run() {
 		}
 	}
 
-	log.Fatalf("Gin Router failed: %+v", router.Run(service.AppAddress))
+	log.Fatalf("Gin Router failed: %+v", router.Run(config2.AppAddress))
 }

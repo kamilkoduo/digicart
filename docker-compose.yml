@@ -8,8 +8,9 @@ networks:
 services:
   redis:
     image: redis:alpine
-#    ports:
-#      - 6379:6379
+    ports:
+      - 6379:6379
+    restart: always
     networks:
       - redis-net
 
@@ -22,6 +23,7 @@ services:
       - REDIS_ADDRESS=redis:6379
       - APP_ADDRESS=0.0.0.0:8080
       - GIN_MODE=debug
+    restart: always
     networks:
       - redis-net
       - web
