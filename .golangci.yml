@@ -18,7 +18,7 @@ linters-settings:
     threshold: 100
   goconst:
     min-len: 2
-    min-occurrences: 2
+    min-occurrences: 1
   depguard:
     list-type: blacklist
     packages:
@@ -48,8 +48,6 @@ linters-settings:
     statements: 50
 
 linters:
-  # please, do not use `enable-all`: it's deprecated and will be removed soon.
-  # inverted configuration with `enable-all` and `disable` is not scalable during updates of golangci-lint
   disable-all: true
   enable:
     - bodyclose
@@ -59,7 +57,6 @@ linters:
     - dupl
     - errcheck
     - funlen
-    - goconst
     - gocritic
     - gocyclo
     - golint
@@ -81,13 +78,8 @@ linters:
     - unused
     - varcheck
     - whitespace
-
-  # don't enable:
-  # - gochecknoglobals
-  # - gocognit
-  # - godox
-  # - maligned
-  # - prealloc
+    - goconst
+    - gomnd
 
 issues:
   exclude-rules:

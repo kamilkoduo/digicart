@@ -1,4 +1,4 @@
-package service
+package config
 
 import (
 	"github.com/go-redis/redis"
@@ -8,7 +8,7 @@ import (
 )
 
 /* vars */
-var redisClient *redis.Client
+var RedisClient *redis.Client
 
 /* app consts*/
 const defaultAppAddress = "0.0.0.0:8080"
@@ -26,7 +26,7 @@ var AppAddress = func() string {
 	return val
 }()
 
-var redisAddress = func() string {
+var RedisAddress = func() string {
 	val, found := os.LookupEnv("REDIS_ADDRESS")
 	if !found {
 		val = defaultRedisAddress
@@ -34,7 +34,7 @@ var redisAddress = func() string {
 	return val
 }()
 
-var redisPassword = func() string {
+var RedisPassword = func() string {
 	val, found := os.LookupEnv("REDIS_PASSWORD")
 	if !found {
 		val = defaultRedisPassword
@@ -42,7 +42,7 @@ var redisPassword = func() string {
 	return val
 }()
 
-var redisDb = func() int {
+var RedisDb = func() int {
 	valStr, found := os.LookupEnv("REDIS_DB")
 	var val int
 	if !found {

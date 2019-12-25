@@ -5,28 +5,29 @@ import (
 	"github.com/google/jsonapi"
 	"github.com/kamilkoduo/digicart/src/api"
 	"github.com/kamilkoduo/digicart/src/carterrors"
+	"github.com/kamilkoduo/digicart/src/rest/config"
 )
 
 func JSONAPIHeader() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		ctx.Header("content-type", jsonapi.MediaType)
+		ctx.Header(config.HeaderContentType, jsonapi.MediaType)
 	}
 }
 func AuthenticationRequired() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		userID := ctx.Request.Header.Get("x-user-id")
-		guestID := ctx.Request.Header.Get("x-guest-id")
+		userID := ctx.Request.Header.Get(config.HeaderUserID)
+		guestID := ctx.Request.Header.Get(config.HeaderGuestID)
 
 		if userID != "" {
-			ctx.Set("cartID", userID)
-			ctx.Set("cartType", api.CartTypeAuthorized)
+			ctx.Set(config.KeyCartID, userID)
+			ctx.Set(config.KeyCartType, api.CartTypeAuthorized)
 
 			if guestID != "" {
-				ctx.Set("mergeCartID", guestID)
+				ctx.Set(config.KeyMergeCartID, guestID)
 			}
 		} else if guestID != "" {
-			ctx.Set("cartID", guestID)
-			ctx.Set("cartType", api.CartTypeGuest)
+			ctx.Set(config.KeyCartID, guestID)
+			ctx.Set(config.KeyCartType, api.CartTypeGuest)
 		} else {
 			cErr := carterrors.New(carterrors.Unauthenticated, "Authentication Required")
 			ctx.Status(cErr.StatusCode())
@@ -40,8 +41,8 @@ func AuthenticationRequired() gin.HandlerFunc {
 
 func CartAuthorization(initCartIfDoesNotExist bool) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		cartID, _ := ctx.Get("cartID")
-		cartType, _ := ctx.Get("cartType")
+		cartID, _ := ctx.Get(config.KeyCartID)
+		cartType, _ := ctx.Get(config.KeyCartType)
 		exists, err := cartAPI.CartExists((cartID).(string))
 		if err != nil {
 			cErr := err.(carterrors.CartError)
@@ -50,7 +51,7 @@ func CartAuthorization(initCartIfDoesNotExist bool) gin.HandlerFunc {
 			ctx.Abort()
 			return
 		}
-		_, withFutureMerge := ctx.Get("mergeCartID")
+		_, withFutureMerge := ctx.Get(config.KeyMergeCartID)
 		if exists {
 			cartTypeActual, err := cartAPI.GetCartType((cartID).(string))
 			if err != nil {
@@ -83,8 +84,8 @@ func CartAuthorization(initCartIfDoesNotExist bool) gin.HandlerFunc {
 }
 func CartMerge() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		cartID, _ := ctx.Get("cartID")
-		mergeCartID, found := ctx.Get("mergeCartID")
+		cartID, _ := ctx.Get(config.KeyCartID)
+		mergeCartID, found := ctx.Get(config.KeyMergeCartID)
 		if found {
 			err := cartAPI.MergeCarts(cartID.(string), mergeCartID.(string))
 			if err != nil {
@@ -101,7 +102,7 @@ func CartMerge() gin.HandlerFunc {
 
 func CartItemPreprocess(withPayload bool) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		cartItemID := ctx.Param("id")
+		cartItemID := ctx.Param(config.KeyID)
 		if cartItemID == "" {
 			cErr := carterrors.New(carterrors.InvalidCartItemID)
 			ctx.Status(cErr.StatusCode())
@@ -120,9 +121,9 @@ func CartItemPreprocess(withPayload bool) gin.HandlerFunc {
 				return
 			}
 			cartItem.CartItemID = cartItemID
-			ctx.Set("cartItem", cartItem)
+			ctx.Set(config.KeyCartItem, cartItem)
 		} else {
-			ctx.Set("cartItemID", cartItemID)
+			ctx.Set(config.KeyCartItemID, cartItemID)
 		}
 		ctx.Next()
 	}

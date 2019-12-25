@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/kamilkoduo/digicart/src/rest"
-	"github.com/kamilkoduo/digicart/src/service"
+	"github.com/kamilkoduo/digicart/src/service/config"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"io/ioutil"
@@ -62,7 +62,7 @@ var _ = Describe("Rest", func() {
 		}()
 		// init urls
 		func() {
-			url.app = "http://" + service.AppAddress
+			url.app = "http://" + config.AppAddress
 			url.cart = url.app + "/api/v1/cart-api/my"
 			url.cartItem = func(id string) string {
 				return url.cart + "/items/:" + id
