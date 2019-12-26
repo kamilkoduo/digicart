@@ -1,13 +1,8 @@
 package service
 
 import (
-	"github.com/go-redis/redis"
 	"github.com/kamilkoduo/digicart/src/api"
 	"github.com/kamilkoduo/digicart/src/carterrors"
-	"github.com/kamilkoduo/digicart/src/service/config"
-	"github.com/kamilkoduo/digicart/src/service/keys"
-	"log"
-	"strconv"
 )
 
 func getCart(cartID string) (*api.Cart, error) {
@@ -22,7 +17,7 @@ func getCart(cartID string) (*api.Cart, error) {
 	if err != nil {
 		return nil, err
 	}
-	mergedCartIDs := getMergedCartIDs(cartID)
+	mergedCartIDs := cartDBAPI.GetMergedCartIDs(cartID)
 	items, err := getCartItems(cartID)
 	if err != nil {
 		return nil, err
@@ -47,8 +42,8 @@ func mergeCarts(targetCartID, sourceCartID string) error {
 		if err != nil {
 			return err
 		}
-		removeCart(sourceCartID)
-		addToMergedCartIDs(targetCartID, sourceCart.MergedCartIDs...)
+		cartDBAPI.RemoveCartCompletely(sourceCartID)
+		cartDBAPI.AddToMergedCartIDs(targetCartID, sourceCart.MergedCartIDs...)
 		for _, item := range sourceCart.Items {
 			err = addCartItem(targetCartID, item)
 			if err != nil {
@@ -56,7 +51,7 @@ func mergeCarts(targetCartID, sourceCartID string) error {
 			}
 		}
 	}
-	addToMergedCartIDs(targetCartID, sourceCartID)
+	cartDBAPI.AddToMergedCartIDs(targetCartID, sourceCartID)
 	return nil
 }
 
@@ -64,10 +59,7 @@ func cartExists(cartID string) (bool, error) {
 	if !validID(cartID) {
 		return false, carterrors.New(carterrors.InvalidCartID, cartID)
 	}
-	found, err := config.RedisClient.SIsMember(keys.CartSet(), cartID).Result()
-	if err != nil {
-		log.Fatalf(err.Error())
-	}
+	found := cartDBAPI.CartIDIsPresent(cartID)
 	return found, nil
 }
 func initCart(cartID string, cartType api.CartType) error {
@@ -78,57 +70,22 @@ func initCart(cartID string, cartType api.CartType) error {
 	if exists {
 		return carterrors.New(carterrors.CartAlreadyExists, cartID)
 	}
-	_, err = config.RedisClient.SAdd(keys.CartSet(), cartID).Result()
-	if err != nil {
-		log.Fatalf(err.Error())
-	}
-	_, err = config.RedisClient.Set(keys.CartTypeKey(cartID), uint8(cartType), -1).Result()
-	if err != nil {
-		log.Fatalf(err.Error())
-	}
+	cartDBAPI.AddCartID(cartID)
+	cartDBAPI.SetCartType(cartID, uint8(cartType))
 	return nil
+
 }
 
-func removeCart(cartID string) {
-	_, err := config.RedisClient.SRem(keys.CartSet(), cartID).Result()
-	if err != nil {
-		log.Fatalf(err.Error())
-	}
-	keysToRemove, err := config.RedisClient.Keys(keys.CartPrefix(cartID) + "*").Result()
-	if err != nil {
-		log.Fatalf(err.Error())
-	}
-	_, err = config.RedisClient.Del(keysToRemove...).Result()
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-}
+
 
 func getCartType(cartID string) (api.CartType, error) {
-	cartTypeStr, err := config.RedisClient.Get(keys.CartTypeKey(cartID)).Result()
-	if err == redis.Nil {
+	found, err := cartExists(cartID)
+	if err != nil {
+		return 0, err
+	}
+	if !found {
 		return 0, carterrors.New(carterrors.CartNotFound)
 	}
-	cartType, err := strconv.ParseUint(cartTypeStr, 10, 0)
-	if err != nil {
-		log.Fatalf(err.Error())
-	}
+	cartType := cartDBAPI.GetCartType(cartID)
 	return api.CartType(cartType), nil
-}
-
-func getMergedCartIDs(cartID string) []string {
-	mergedCartsSet, err := config.RedisClient.SMembers(keys.CartMergedSet(cartID)).Result()
-	if err != nil {
-		log.Fatalf(err.Error())
-	}
-	return mergedCartsSet
-}
-
-func addToMergedCartIDs(cartID string, mergedID ...string) {
-	if len(mergedID) > 0 {
-		_, err := config.RedisClient.SAdd(keys.CartMergedSet(cartID), mergedID).Result()
-		if err != nil {
-			log.Fatalf(err.Error())
-		}
-	}
 }

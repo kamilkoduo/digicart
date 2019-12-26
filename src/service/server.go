@@ -2,8 +2,12 @@ package service
 
 import (
 	"github.com/kamilkoduo/digicart/src/api"
+	"github.com/kamilkoduo/digicart/src/service/config"
+	db_api "github.com/kamilkoduo/digicart/src/service/db/api"
 )
+// CartAPIServer ...
 type CartAPIServer struct{}
+var cartDBAPI db_api.CartDBAPI = config.CartDBAPIServer
 
 func (s CartAPIServer) GetCartType(cartID string) (api.CartType, error) {
 	return getCartType(cartID)

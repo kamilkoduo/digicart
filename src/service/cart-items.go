@@ -3,8 +3,7 @@ package service
 import (
 	"github.com/kamilkoduo/digicart/src/api"
 	"github.com/kamilkoduo/digicart/src/carterrors"
-	"github.com/kamilkoduo/digicart/src/service/config"
-	"github.com/kamilkoduo/digicart/src/service/keys"
+	"github.com/kamilkoduo/digicart/src/service/db/service/keys"
 	"log"
 	"strconv"
 )
@@ -17,14 +16,14 @@ func addCartItem(cartID string, cartItem *api.CartItem) error {
 	if found {
 		return carterrors.New(carterrors.CartItemAlreadyExists, cartID, cartItem.CartItemID)
 	}
-	addCartItemID(cartID, cartItem.CartItemID)
+	cartDBAPI.AddCartItemID(cartID, cartItem.CartItemID)
 	infoMap := map[string]interface{}{
 		keys.ItemOfferIDMapKey():    cartItem.OfferID,
 		keys.ItemOfferPriceMapKey(): cartItem.OfferPrice,
 		keys.ItemCountMapKey():      cartItem.Count,
 	}
-	addCartItemInfo(cartID, cartItem.CartItemID, infoMap)
-	addCartItemOfferTitle(cartID, cartItem.CartItemID, (interface{}(cartItem.OfferTitle)).(map[string]interface{}))
+	cartDBAPI.AddCartItemInfo(cartID, cartItem.CartItemID, infoMap)
+	cartDBAPI.AddCartItemOfferTitle(cartID, cartItem.CartItemID, (interface{}(cartItem.OfferTitle)).(map[string]interface{}))
 	return nil
 }
 
@@ -54,9 +53,9 @@ func removeCartItem(cartID, cartItemID string) error {
 	if !found {
 		return carterrors.New(carterrors.CartItemNotFound, cartID, cartItemID)
 	}
-	removeCartItemID(cartID, cartItemID)
-	removeCartItemInfo(cartID, cartItemID)
-	removeCartItemOfferTitle(cartID, cartItemID)
+	cartDBAPI.RemoveCartItemID(cartID, cartItemID)
+	cartDBAPI.RemoveCartItemInfo(cartID, cartItemID)
+	cartDBAPI.RemoveCartItemOfferTitle(cartID, cartItemID)
 	return nil
 }
 func cartItemExists(cartID, cartItemID string) (bool, error) {
@@ -66,31 +65,10 @@ func cartItemExists(cartID, cartItemID string) (bool, error) {
 	if !validID(cartItemID) {
 		return false, carterrors.New(carterrors.InvalidCartItemID, cartItemID)
 	}
-	found, err := config.RedisClient.SIsMember(keys.CartItemSet(cartID), cartItemID).Result()
-	if err != nil {
-		log.Fatalf(err.Error())
-	}
+	found := cartDBAPI.CartItemIDIsPresent(cartID, cartItemID)
 	return found, nil
 }
 
-func getCartItemInfo(cartID, cartItemID string) map[string]string {
-	info, err := config.RedisClient.HGetAll(keys.ItemInfoMap(cartID, cartItemID)).Result()
-	if err != nil {
-		log.Fatalf(err.Error())
-	}
-	return info
-}
-func getCartItemOfferTitle(cartID, cartItemID string) map[string]interface{} {
-	title, err := config.RedisClient.HGetAll(keys.ItemOfferTitleMap(cartID, cartItemID)).Result()
-	if err != nil {
-		log.Fatalf(err.Error())
-	}
-	titleSI := make(map[string]interface{})
-	for k, v := range title {
-		titleSI[k] = v
-	}
-	return titleSI
-}
 func getCartItem(cartID, cartItemID string) (*api.CartItem, error) {
 	found, err := cartItemExists(cartID, cartItemID)
 	if err != nil {
@@ -99,8 +77,8 @@ func getCartItem(cartID, cartItemID string) (*api.CartItem, error) {
 	if !found {
 		return nil, carterrors.New(carterrors.CartItemNotFound, cartID, cartItemID)
 	}
-	infoMap := getCartItemInfo(cartID, cartItemID)
-	titleMap := getCartItemOfferTitle(cartID, cartItemID)
+	infoMap := cartDBAPI.GetCartItemInfo(cartID, cartItemID)
+	titleMap := cartDBAPI.GetCartItemOfferTitle(cartID, cartItemID)
 	offerID := infoMap[keys.ItemOfferIDMapKey()]
 	offerPrice, err := strconv.ParseFloat(infoMap[keys.ItemOfferPriceMapKey()], 64)
 	if err != nil {
@@ -120,10 +98,7 @@ func getCartItem(cartID, cartItemID string) (*api.CartItem, error) {
 	return cartItem, nil
 }
 func getCartItems(cartID string) ([]*api.CartItem, error) {
-	itemIDs, err := config.RedisClient.SMembers(keys.CartItemSet(cartID)).Result()
-	if err != nil {
-		log.Fatalf(err.Error())
-	}
+	itemIDs := cartDBAPI.GetCartItemIDs(cartID)
 	items := make([]*api.CartItem, 0, len(itemIDs))
 	for _, itemID := range itemIDs {
 		cartItem, err := getCartItem(cartID, itemID)
@@ -133,41 +108,4 @@ func getCartItems(cartID string) ([]*api.CartItem, error) {
 		items = append(items, cartItem)
 	}
 	return items, nil
-}
-func addCartItemID(cartID, cartItemID string) {
-	_, err := config.RedisClient.SAdd(keys.CartItemSet(cartID), cartItemID).Result()
-	if err != nil {
-		log.Fatalf(err.Error())
-	}
-}
-func removeCartItemID(cartID, cartItemID string) {
-	_, err := config.RedisClient.SRem(keys.CartItemSet(cartID), cartItemID).Result()
-	if err != nil {
-		log.Fatalf(err.Error())
-	}
-}
-func addCartItemInfo(cartID, cartItemID string, cartItemInfo map[string]interface{}) {
-	_, err := config.RedisClient.HMSet(keys.ItemInfoMap(cartID, cartItemID), cartItemInfo).Result()
-	if err != nil {
-		log.Fatalf(err.Error())
-	}
-}
-func removeCartItemInfo(cartID, cartItemID string) {
-	_, err := config.RedisClient.Del(keys.ItemInfoMap(cartID, cartItemID)).Result()
-	if err != nil {
-		log.Fatalf(err.Error())
-	}
-}
-
-func addCartItemOfferTitle(cartID, cartItemID string, cartItemOfferTitle map[string]interface{}) {
-	_, err := config.RedisClient.HMSet(keys.ItemOfferTitleMap(cartID, cartItemID), cartItemOfferTitle).Result()
-	if err != nil {
-		log.Fatalf(err.Error())
-	}
-}
-func removeCartItemOfferTitle(cartID, cartItemID string) {
-	_, err := config.RedisClient.Del(keys.ItemOfferTitleMap(cartID, cartItemID)).Result()
-	if err != nil {
-		log.Fatalf(err.Error())
-	}
 }
