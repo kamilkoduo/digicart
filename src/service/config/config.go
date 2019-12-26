@@ -8,25 +8,30 @@ import (
 )
 
 // RedisClient ...
-var RedisClient *redis.Client
+var RedisClient = func() *redis.Client {
+	log.Printf("\nStarting services. Expecting Redis on: %v\n\n", redisAddress)
+	rc := redis.NewClient(&redis.Options{
+		Addr:     redisAddress,
+		Password: redisPassword,
+		DB:       redisDb,
+	})
+	_, err := rc.Ping().Result()
+	if err != nil {
+		log.Fatal("Unable to connect")
+	} else {
+		log.Printf("Successfully pinged Redis. Ready to accept connections.\n")
+	}
+	return rc
+}()
 
-/* app consts*/
-const defaultAppAddress = "0.0.0.0:8080"
 
 /* Redis consts */
 const defaultRedisAddress = "0.0.0.0:6379"
 const defaultRedisPassword = ""
 const defaultRedisDB = 0
 
-var AppAddress = func() string {
-	val, found := os.LookupEnv("APP_ADDRESS")
-	if !found {
-		val = defaultAppAddress
-	}
-	return val
-}()
 
-var RedisAddress = func() string {
+var redisAddress = func() string {
 	val, found := os.LookupEnv("REDIS_ADDRESS")
 	if !found {
 		val = defaultRedisAddress
@@ -34,7 +39,7 @@ var RedisAddress = func() string {
 	return val
 }()
 
-var RedisPassword = func() string {
+var redisPassword = func() string {
 	val, found := os.LookupEnv("REDIS_PASSWORD")
 	if !found {
 		val = defaultRedisPassword
@@ -42,7 +47,7 @@ var RedisPassword = func() string {
 	return val
 }()
 
-var RedisDb = func() int {
+var redisDb = func() int {
 	valStr, found := os.LookupEnv("REDIS_DB")
 	var val int
 	if !found {
