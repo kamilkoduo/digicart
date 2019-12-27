@@ -15,6 +15,10 @@ func (s CartAPIServer) cartItemExists(cartID, cartItemID string) (bool, error) {
 	if !validID(cartItemID) {
 		return false, carterrors.New(carterrors.InvalidCartItemID, cartItemID)
 	}
+	cartFound := s.cartDBAPI.CartIDIsPresent(cartID)
+	if !cartFound {
+		return false, carterrors.New(carterrors.CartNotFound)
+	}
 	found := s.cartDBAPI.CartItemIDIsPresent(cartID, cartItemID)
 	return found, nil
 }
@@ -59,6 +63,7 @@ func (s CartAPIServer) getCartItems(cartID string) ([]*api.CartItem, error) {
 	return items, nil
 }
 func (s CartAPIServer) addCartItem(cartID string, cartItem *api.CartItem) error {
+	//cart existence is checked in cart item exists
 	found, err := s.cartItemExists(cartID, cartItem.CartItemID)
 	if err != nil {
 		return err
@@ -77,14 +82,8 @@ func (s CartAPIServer) addCartItem(cartID string, cartItem *api.CartItem) error 
 	return nil
 }
 func (s CartAPIServer) updateCartItem(cartID string, cartItem *api.CartItem) error {
-	found, err := s.cartItemExists(cartID, cartItem.CartItemID)
-	if err != nil {
-		return err
-	}
-	if !found {
-		return carterrors.New(carterrors.CartItemNotFound, cartID, cartItem.CartItemID)
-	}
-	err = s.removeCartItem(cartID, cartItem.CartItemID)
+	//existence is checked in remove cart item
+	err := s.removeCartItem(cartID, cartItem.CartItemID)
 	if err != nil {
 		return err
 	}

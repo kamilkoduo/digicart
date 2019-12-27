@@ -24,7 +24,7 @@ func (s *CartAPIServer) CartExists(cartID string) (bool, error) {
 	return s.cartExists(cartID)
 }
 
-func (s *CartAPIServer) InitCart(cartID string, cartType api.CartType) (error) {
+func (s *CartAPIServer) InitCart(cartID string, cartType api.CartType) error {
 	return s.initCart(cartID, cartType)
 }
 

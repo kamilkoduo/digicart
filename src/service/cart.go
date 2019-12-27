@@ -26,16 +26,17 @@ func (s CartAPIServer) getCart(cartID string) (*api.Cart, error) {
 	return cart, nil
 }
 func (s CartAPIServer) mergeCarts(targetCartID, sourceCartID string) error {
-	// check cart existence
-	foundS, err := s.cartExists(sourceCartID)
+	// check target cart existence
+	exists, err := s.CartExists(targetCartID)
 	if err != nil {
 		return err
 	}
-	if foundS {
-		sourceCart, err := s.getCart(sourceCartID)
-		if err != nil {
-			return err
-		}
+	if ! exists {
+		return carterrors.New(carterrors.CartNotFound)
+	}
+	// source cart existence is checked inside getCart method
+	sourceCart, err := s.getCart(sourceCartID)
+	if err == nil {
 		s.cartDBAPI.RemoveCartCompletely(sourceCartID)
 		s.cartDBAPI.AddToMergedCartIDs(targetCartID, sourceCart.MergedCartIDs...)
 		for _, item := range sourceCart.Items {
@@ -43,6 +44,10 @@ func (s CartAPIServer) mergeCarts(targetCartID, sourceCartID string) error {
 			if err != nil {
 				return err
 			}
+		}
+	} else {
+		if !err.(carterrors.CartError).IsType(carterrors.CartNotFound) {
+			return err
 		}
 	}
 	s.cartDBAPI.AddToMergedCartIDs(targetCartID, sourceCartID)
