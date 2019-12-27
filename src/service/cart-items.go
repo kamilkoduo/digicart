@@ -63,7 +63,7 @@ func (s CartAPIServer) getCartItems(cartID string) ([]*api.CartItem, error) {
 	return items, nil
 }
 func (s CartAPIServer) addCartItem(cartID string, cartItem *api.CartItem) error {
-	//cart existence is checked in cart item exists
+	// cart existence is checked in cart item exists
 	found, err := s.cartItemExists(cartID, cartItem.CartItemID)
 	if err != nil {
 		return err
@@ -82,7 +82,7 @@ func (s CartAPIServer) addCartItem(cartID string, cartItem *api.CartItem) error 
 	return nil
 }
 func (s CartAPIServer) updateCartItem(cartID string, cartItem *api.CartItem) error {
-	//existence is checked in remove cart item
+	// existence is checked in remove cart item
 	err := s.removeCartItem(cartID, cartItem.CartItemID)
 	if err != nil {
 		return err

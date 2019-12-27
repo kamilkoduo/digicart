@@ -45,10 +45,8 @@ func (s CartAPIServer) mergeCarts(targetCartID, sourceCartID string) error {
 				return err
 			}
 		}
-	} else {
-		if !err.(carterrors.CartError).IsType(carterrors.CartNotFound) {
-			return err
-		}
+	} else if !err.(carterrors.CartError).IsType(carterrors.CartNotFound) {
+		return err
 	}
 	s.cartDBAPI.AddToMergedCartIDs(targetCartID, sourceCartID)
 	return nil
@@ -72,7 +70,6 @@ func (s CartAPIServer) initCart(cartID string, cartType api.CartType) error {
 	s.cartDBAPI.AddCartID(cartID)
 	s.cartDBAPI.SetCartType(cartID, uint8(cartType))
 	return nil
-
 }
 func (s CartAPIServer) getCartType(cartID string) (api.CartType, error) {
 	found, err := s.cartExists(cartID)
