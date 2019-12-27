@@ -6,13 +6,11 @@ import (
 	"github.com/kamilkoduo/digicart/src/api"
 	"github.com/kamilkoduo/digicart/src/carterrors"
 	"github.com/kamilkoduo/digicart/src/rest/config"
-	"github.com/kamilkoduo/digicart/src/service"
-	config2 "github.com/kamilkoduo/digicart/src/service/config"
 	"log"
 	"net/http"
 )
 
-var cartAPI api.CartAPI = service.CartAPIServer{}
+var cartAPI  = config.APIServer
 
 func Run() {
 	router := gin.Default()
@@ -78,7 +76,7 @@ func Run() {
 					ctx.Status(http.StatusOK)
 				})
 			// post
-			items.DELETE("/:id",
+			items.DELETE("/:"+config.KeyID,
 				CartAuthorization(false),
 				CartMerge(),
 				CartItemPreprocess(false),
@@ -98,5 +96,5 @@ func Run() {
 		}
 	}
 
-	log.Fatalf("Gin Router failed: %+v", router.Run(config2.AppAddress))
+	log.Fatalf("Gin Router failed: %+v", router.Run(config.AppAddress))
 }

@@ -1,9 +1,36 @@
 package config
 
+import (
+	"github.com/kamilkoduo/digicart/src/api"
+	"github.com/kamilkoduo/digicart/src/service"
+	service_db "github.com/kamilkoduo/digicart/src/service/db/service"
+	"os"
+)
+
+// APIServer ...
+var APIServer api.CartAPI = func() api.CartAPI {
+	s := &service.CartAPIServer{}
+	dbs := &service_db.CartDBRedisServer{}
+	s.RegisterCartDBAPIServer(dbs)
+	return s
+}()
+
+/* app consts*/
+const defaultAppAddress = "0.0.0.0:8080"
+
+// AppAddress ...
+var AppAddress = func() string {
+	val, found := os.LookupEnv("APP_ADDRESS")
+	if !found {
+		val = defaultAppAddress
+	}
+	return val
+}()
+
 // headers
 const (
-	HeaderUserID  = "x-user-id"
-	HeaderGuestID = "x-guest-id"
+	HeaderUserID      = "x-user-id"
+	HeaderGuestID     = "x-guest-id"
 	HeaderContentType = "content-type"
 )
 
@@ -15,11 +42,10 @@ const (
 
 // keys
 const (
-	KeyCartID = "cartID"
-	KeyCartType = "cartType"
+	KeyCartID      = "cartID"
+	KeyCartType    = "cartType"
 	KeyMergeCartID = "mergeCartID"
-	KeyID = "id"
-	KeyCartItem = "cartItem"
-	KeyCartItemID = "cartItemID"
-
+	KeyID          = "id"
+	KeyCartItem    = "cartItem"
+	KeyCartItemID  = "cartItemID"
 )
