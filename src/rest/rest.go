@@ -10,7 +10,7 @@ import (
 	"net/http"
 )
 
-var cartAPI api.CartAPI = config.APIServer
+var cartAPI  = config.APIServer
 
 func Run() {
 	router := gin.Default()
