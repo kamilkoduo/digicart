@@ -15,7 +15,8 @@ ENV CGO_ENABLED 0
 
 COPY ./src /go/src/github.com/kamilkoduo/digicart/src
 
-#RUN go test /go/src/github.com/kamilkoduo/digicart/src/rest
+RUN go test -tags=unit /go/src/github.com/kamilkoduo/digicart/src/service
+# for integration tests
 # suggested scenario: run container with code with go test command in a docker-compose with redis,
 # then build binary and put to alpine
 
