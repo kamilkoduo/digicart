@@ -7,6 +7,12 @@ stages:
   - lint
   - build
   - success
+  - deploy
+
+deploy:
+  provider: heroku
+  api_key:
+    secure: ls01w0s4Nm5BFQRr7F2gL+nFwortboX9tSJAE4X4FF97MuZDHdDESquJTRmOOWFy/lE8p6dORx1zu2tVpSxpbBSaKczw7hgdgggoJpgkZx1yaZdjWjA1w003a+HJCLqMVp3Xnd3iTWVaWb8bncjkNBQhJTm5HLv/Ou72ZxVsLsgDI0ZRvzVNCWo1e8Isx8EjAyW+6CwYNWzAo84HO55p98dMsDvDiIJ/1Stty2Lm6IDSN5sj62fA1lqh+YoSyjZ1l6B0G+lPVJUio2D43nI2TqlJoVQilCUKxVvX1PFTQ79K594yy15Nd5DsyShweIzAQZQMLm72Mpg0MCpsxJZ4liya4u+MfzmlcU8Raai+7pwRVEHVFloQZI9O2BmY9+lyiaeNT2GyMWt3tI7NfVV06SdF9V3OxGZHrlOXM6bXu+674XoOPtlEdpwIMY1TGO9h+d7dSwac98xecYvvrTx8Wk5ejLmfLgzoSzBtzKY5+oP0ltlgL/k/azdpmv4u0SYgYrou654sQY68jRRfZrRSKjcQvdOgH8zzCSqtHSp5IDtHUd6xZyOjd+rQCCnr+Q9JBhmYIXaVtqbmcF0ZTAVSsnQwAhWYBi5mU6iFMPsStcgaekS/2B53DLJug3PEjlQt7iWwtFkol2cnlWdJ2ThIVky46iSAFBE5XxjPHumTcmo=
 
 before_install:
   - docker login --username ${CI_REGISTRY_USERNAME} -p ${CI_REGISTRY_TOKEN} ${CI_REGISTRY_URL}
