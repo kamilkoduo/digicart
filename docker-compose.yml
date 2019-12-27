@@ -15,7 +15,7 @@ services:
       - redis-net
 
   cart-service:
-    image: registry.github.com/kamilkoduo/digicart/cart:local
+    image: registry.local/kamilkoduo/digicart/cart:local
     command: "/app/cart/build"
     ports:
       - 80:8080
